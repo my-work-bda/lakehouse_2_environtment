@@ -1,0 +1,94 @@
+<configuration>
+    <!-- Hive Metastore Configuration -->
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive-metastore-2:9083</value>
+        <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.</description>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+        <description>Driver class name for the PostgreSQL metastore</description>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:postgresql://postgres-2:5432/metastore_db</value>
+        <description>JDBC connection URL for the PostgreSQL metastore</description>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+        <description>Username to use against metastore database</description>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>hive123</value>
+        <description>Password to use against metastore database</description>
+    </property>
+
+    <!-- Minio Configuration -->
+    <property>
+        <name>fs.s3a.endpoint</name>
+        <value>http://minio:9000</value>
+        <description>Endpoint for Minio S3 storage</description>
+    </property>
+
+    <property>
+        <name>metastore.warehouse.dir</name>
+        <value>s3a://bucket-sm/warehouse/</value>
+        <description>Default warehouse directory for the Hive metastore</description>
+    </property>
+
+    <property>
+        <name>fs.s3a.access.key</name>
+        <value>admin</value>
+        <description>Access key for Minio S3 storage</description>
+    </property>
+
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <value>password</value>
+        <description>Secret key for Minio S3 storage</description>
+    </property>
+
+    <property>
+        <name>fs.s3a.path.style.access</name>
+        <value>true</value>
+        <description>Enable path style access for S3</description>
+    </property>
+
+    <!-- Optional Additional Properties -->
+    <property>
+        <name>datanucleus.autoCreateSchema</name>
+        <value>false</value>
+        <description>Set this to false after the first run to avoid creating schema automatically</description>
+    </property>
+
+    <property>
+        <name>datanucleus.fixedDatastore</name>
+        <value>true</value>
+        <description>Set to true if the datastore schema is fixed</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.schema.verification</name>
+        <value>true</value>
+        <description>Enable metastore schema verification</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.schema.verification.record.version</name>
+        <value>true</value>
+        <description>Record metastore schema version</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.checkForDefaultDb</name>
+        <value>true</value>
+        <description>Check for default database existence at startup</description>
+    </property>
+</configuration>

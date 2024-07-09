@@ -1,0 +1,148 @@
+services:
+  minio:
+    # container_name: minio
+    image: minio/minio
+    networks:
+      - my-network
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - minio-data:/data
+      - minio-config:/root/.minio
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password
+    command: server /data --console-address ":9090"
+
+  postgres-1:
+    # container_name: postgres
+    image: postgres:14.2-alpine
+    # ports:
+    #   - 5434:5432
+    environment:
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive123
+      POSTGRES_DB: metastore_db
+    depends_on: 
+      - minio
+    networks:
+      - my-network
+    volumes:
+      - postgres-data-1:/var/lib/postgresql/data
+
+  postgres-2:
+    container_name: postgres-2
+    image: postgres:14.2-alpine
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive123
+      POSTGRES_DB: metastore_db
+    depends_on: 
+      - minio
+    networks:
+      - my-network
+    volumes:
+      - postgres-data-2:/var/lib/postgresql/data
+
+
+  hive-metastore-1:
+    container_name: hive-metastore-1
+    image: kevinity310/lasagna-hms:dev
+    # ports:
+    #   - 9083:9083
+    depends_on:
+      - postgres-1
+      - minio
+    networks:
+      - my-network
+    volumes : 
+      - ./hms-conf/metastore-site-1.xml:/usr/local/hive-metastore/conf/metastore-site.xml
+    # healthcheck:
+    #     test:  ["CMD-SHELL", "nc -z localhost 9083 || exit 1"]
+    #     interval: 30s
+    #     timeout: 10s
+    #     retries: 3
+    # restart: always
+
+  hive-metastore-2:
+    container_name: hive-metastore-2
+    image: kevinity310/lasagna-hms:dev
+    # ports:
+    #   - 9083:9083
+    depends_on:
+      - postgres-2
+      - minio
+    networks:
+      - my-network
+    volumes : 
+      - ./hms-conf/metastore-site-2.xml:/usr/local/hive-metastore/conf/metastore-site.xml
+    # healthcheck:
+    #     test:  ["CMD-SHELL", "nc -z localhost 9083 || exit 1"]
+    #     interval: 30s
+    #     timeout: 10s
+    #     retries: 3
+    # restart: always
+
+#+------------------------------------+
+#| Jupyter notebook for Working space |
+#+------------------------------------+
+  workspace-gg:
+    container_name: workspace-gg
+    image:  kevinity310/lasagna-workspace:dev
+    networks:
+      - my-network
+    ports:
+      - "8889:8888"
+      - "18080:18080"
+      # - "4040:4040"
+    volumes:
+      - ./work:/usr/local/spark_dev/work
+      - ./spark/jars:/usr/local/lib/python3.10/dist-packages/pyspark/extraJars
+      - ./spark/spark-defaults-gg.conf:/usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
+
+  workspace-sm:
+      container_name: workspace-sm
+      image:  kevinity310/lasagna-workspace:dev
+      networks:
+        - my-network
+      ports:
+        - "8890:8888"
+        - "18081:18080"
+        # - "4040:4040"
+      volumes:
+        - ./work:/usr/local/spark_dev/work
+        - ./spark/jars:/usr/local/lib/python3.10/dist-packages/pyspark/extraJars
+        - ./spark/spark-defaults-sm.conf:/usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf 
+      
+
+  trino:
+    container_name: trino
+    build: ./images/trino
+    image: kevinity310/lasagna-trino:dev
+    depends_on:
+      - hive-metastore-1
+      - hive-metastore-2
+      - minio
+    networks:
+      - my-network
+    ports:
+      - "8081:8080"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+      
+networks:
+  my-network:
+    driver: bridge
+    name: my-network
+
+volumes:
+  minio-data:
+  postgres-data-1:
+  postgres-data-2:
+  minio-config:
